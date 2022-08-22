@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import time
 
 import numpy as np
 from PIL import Image
@@ -46,7 +47,6 @@ def normalize(tensor, mean, std):
     tensor = (tensor - mean) / std
     return tensor
 
-# img_path = './data/640px-Cat_close-up_2004_b.jpg'
 
 # 初始化Pytorch模型
 torch_model = torch_fishnet99()
@@ -73,13 +73,21 @@ for img_name in img_name_list:
     norm_img = normalize(tensor_img, mean_list, std_list)
         
     # 2.使用官方模型推理 
+    torch_start_time = time.time()
     with torch.no_grad():
         torch_output = torch_model(torch.from_numpy(norm_img.numpy()).unsqueeze(0))
     torch_score, torch_class_id = torch_output.topk(5, 1, True, True)
+    torch_end_time = time.time()
+    print("torch inference time: {:.3f}s".format(torch_end_time-torch_start_time))
+
 
     # 3.使用Megengine模型推理
+    megengine_start_time = time.time()
     megengine_output = megengine_model(F.expand_dims(norm_img, 0))
     megengine_score, megengine_class_id = F.topk(megengine_output, 5, True)
+    megengine_end_time = time.time()
+    print("megengine inference time: {:.3f}s".format(megengine_end_time-megengine_start_time))
+
 
     # 4.比较官方模型和Megengine模型的输出
     np.testing.assert_allclose(megengine_score.numpy(), torch_score.cpu().numpy(), rtol=1e-3)
