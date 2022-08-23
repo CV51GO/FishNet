@@ -37,6 +37,6 @@ def get_megengine_fishnet_model():
 
 在使用模型时，使用如下代码即可加载权重：
 ```python
-from GFLv2 import get_Megengine_GFLv2_model
+from official_FishNet.net_factory import fishnet99 as torch_fishnet99
 megengine_model = get_megengine_fishnet99(pretrained=True)
 ```
